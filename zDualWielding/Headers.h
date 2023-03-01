@@ -3,6 +3,7 @@
 
 // Automatically generated block
 #pragma region Includes
+#include "DualWielding.h"
 #include "Plugin.h"
 #pragma endregion
 

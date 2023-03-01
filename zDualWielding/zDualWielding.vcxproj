@@ -852,6 +852,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DllMain.cpp" />
+    <ClInclude Include="DualWielding.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="DualWielding.cpp">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="oCNpc_Union.cpp">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Plugin.cpp" />
     <ClCompile Include="Interface.cpp" />
     <ClCompile Include="ZenGin\Gothic_II_Addon\ClassDeclarators_G2A.cpp" />

@@ -2778,6 +2778,15 @@
       <Filter>Plugin\Workspace\Plugin</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="DualWielding.h">
+      <Filter>Plugin\Workspace\Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="DualWielding.cpp">
+      <Filter>Plugin\Workspace\Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="oCNpc_Union.cpp">
+      <Filter>Plugin\Workspace\Plugin</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".build_settings.inl">
