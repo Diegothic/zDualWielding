@@ -6,30 +6,21 @@ namespace GOTHIC_ENGINE {
 	// void EquipWeapon( oCItem* ) zCall( 0x0073A030 );
 	HOOK Hook_oCNpc_EquipWeapon_Union PATCH(&oCNpc::EquipWeapon, &oCNpc::EquipWeapon_Union);
 	void oCNpc::EquipWeapon_Union(oCItem* WeaponToEquip) {
-		DualWielding*    DW                 = DW->GetInstance();
-		zCModel*         NpcModel           = GetModel();
-		zCModelNodeInst* LongswordNode      = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
-		oCItem*          LeftSwordEquipped  = DW->GetEquippedLeftSword(this);
-		oCItem*          RightSwordEquipped = GetSlotItem(NPC_NODE_SWORD);
-
-		if (!DW->HasLeftWeaponSlots(this)) {
-			DW->CreateLeftWeaponSlots(this);
-		}
-
-		DW->RemoveDualAnimations(this);
+		DualWielding DualWielder(this);
+		DualWielder.RemoveDualAnimations();
 		
+		oCItem* LeftSwordEquipped = DualWielder.GetEquippedLeftSword();
+		oCItem* RightSwordEquipped = GetSlotItem(NPC_NODE_SWORD);
 		if (LeftSwordEquipped && RightSwordEquipped) {
 			if (WeaponToEquip == LeftSwordEquipped) {
-				DW->UnequipLeftWeapon(this);
+				DualWielder.UnequipLeftWeapon();
 				EquipItem(RightSwordEquipped);
 				PutInSlot(NPC_NODE_SWORD, RightSwordEquipped, 1);
 				return;
 			}
 
-			DW->UnequipLeftWeapon(this);
-			RemoveFromSlot(NPC_NODE_SWORD, 1, 1);
-			UnequipItem(RightSwordEquipped);
-			NpcModel->SetNodeVisual(LongswordNode, Null, 0);
+			DualWielder.UnequipLeftWeapon();
+			DualWielder.UnequipRightWeapon();
 
 			if (WeaponToEquip != RightSwordEquipped) {
 				THISCALL(Hook_oCNpc_EquipWeapon_Union)(WeaponToEquip);
@@ -41,15 +32,15 @@ namespace GOTHIC_ENGINE {
 		if (
 			!RightSwordEquipped
 			|| RightSwordEquipped == WeaponToEquip
-			|| !DW->IsWeaponForDualWielding(RightSwordEquipped)
-			|| !DW->IsWeaponForDualWielding(WeaponToEquip)
+			|| !DualWielder.IsWeaponForDualWielding(RightSwordEquipped)
+			|| !DualWielder.IsWeaponForDualWielding(WeaponToEquip)
 			) {
 			THISCALL(Hook_oCNpc_EquipWeapon_Union)(WeaponToEquip);
 			return;
 		}
 
-		DW->EquipDualWeapons(this, RightSwordEquipped, WeaponToEquip);
-		DW->ApplyDualAnimations(this);
+		DualWielder.EquipDualWeapons(RightSwordEquipped, WeaponToEquip);
+		DualWielder.ApplyDualAnimations();
 	}
 
 }

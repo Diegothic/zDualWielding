@@ -6,24 +6,15 @@ namespace GOTHIC_ENGINE {
 	const char* DualWielding::NPC_NODE_LEFTSWORD = "ZS_LEFTSWORD";
 	const char* DualWielding::NPC_NODE_LEFTHANDSWORD = "ZS_LEFTHANDSWORD";
 
-	DualWielding* DualWielding::Instance = nullptr;
-
-	DualWielding::~DualWielding() {
-		if (Instance != nullptr) {
-			delete Instance;
-			Instance = nullptr;
+	DualWielding::DualWielding(oCNpc* Npc) : Npc(Npc) {
+		if (!HasLeftWeaponSlots()) {
+			CreateLeftWeaponSlots();
 		}
 	}
 
-	DualWielding* DualWielding::GetInstance() {
-		if (Instance == nullptr) {
-			Instance = new DualWielding();
-		}
+	DualWielding::~DualWielding() { }
 
-		return Instance;
-	}
-
-	bool32 DualWielding::HasLeftWeaponSlots(oCNpc* Npc) const {
+	bool32 DualWielding::HasLeftWeaponSlots() const {
 		TNpcSlot*        LeftWeaponInvSlot = Npc->GetInvSlot(NPC_NODE_LEFTSWORD);
 		zCModel*         NpcModel          = Npc->GetModel();
 		zCModelNodeInst* LeftSwordNode     = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
@@ -31,7 +22,7 @@ namespace GOTHIC_ENGINE {
 		return LeftWeaponInvSlot && LeftSwordNode && LeftHandSwordNode;
 	}
 
-	void DualWielding::CreateLeftWeaponSlots(oCNpc* Npc) const {
+	void DualWielding::CreateLeftWeaponSlots() const {
 		TNpcSlot*        LeftWeaponInvSlot = Npc->GetInvSlot(NPC_NODE_LEFTSWORD);
 		zCModel*         NpcModel          = Npc->GetModel();
 		zCModelNodeInst* LongswordNode     = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
@@ -50,7 +41,7 @@ namespace GOTHIC_ENGINE {
 			NodeTrafo.PostRotateY(-60.0f);
 			NodeTrafo.Translate(zVEC3(0.0f, 35.0f, 1.5f));
 
-			CreateNode(Npc, LongswordNode, NPC_NODE_LEFTSWORD, NodeTrafo);
+			CreateNode(LongswordNode, NPC_NODE_LEFTSWORD, NodeTrafo);
 		}
 
 		if (!LeftHandSwordNode) {
@@ -58,12 +49,11 @@ namespace GOTHIC_ENGINE {
 			NodeTrafo.PostRotateX(180.0f);
 			NodeTrafo.Translate(zVEC3(0.0f, -5.0f, 0.0f));
 
-			CreateNode(Npc, LeftHandNode, NPC_NODE_LEFTHANDSWORD, NodeTrafo);
+			CreateNode(LeftHandNode, NPC_NODE_LEFTHANDSWORD, NodeTrafo);
 		}
 	}
 
 	void DualWielding::CreateNode(
-		oCNpc*           Npc, 
 		zCModelNodeInst* TemplateNode, 
 		const zSTRING&   NodeName, 
 		zMAT4            NodeTrafo
@@ -85,7 +75,6 @@ namespace GOTHIC_ENGINE {
 	}
 
 	void DualWielding::EquipDualWeapons(
-		oCNpc*  Npc,
 		oCItem* RightHandWeapon,
 		oCItem* LeftHandWeapon
 	) const {
@@ -104,30 +93,39 @@ namespace GOTHIC_ENGINE {
 		NpcModel->SetNodeVisual(LeftSwordNode, LeftHandWeapon->visual, 0);
 	}
 
-	void DualWielding::UnequipLeftWeapon(oCNpc* Npc) const {
+	void DualWielding::UnequipLeftWeapon() const {
 		zCModel*         NpcModel          = Npc->GetModel();
-		zCModelNodeInst* LongswordNode     = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst* LeftSwordNode     = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
 		oCItem*          LeftSwordEquipped = Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
 
 		Npc->RemoveFromSlot(NPC_NODE_LEFTSWORD, 1, 1);
 		Npc->UnequipItem(LeftSwordEquipped);
+		Npc->GetModel()->SetNodeVisual(LeftSwordNode, Null, 0);
+	}
+
+	void DualWielding::UnequipRightWeapon() const {
+		zCModel*         NpcModel           = Npc->GetModel();
+		zCModelNodeInst* LongswordNode      = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		oCItem*          RightSwordEquipped = Npc->GetSlotItem(NPC_NODE_SWORD);
+
+		Npc->RemoveFromSlot(NPC_NODE_SWORD, 1, 1);
+		Npc->UnequipItem(RightSwordEquipped);
 		Npc->GetModel()->SetNodeVisual(LongswordNode, Null, 0);
 	}
 
-	oCItem* DualWielding::GetEquippedLeftSword(oCNpc* Npc) const {
+	oCItem* DualWielding::GetEquippedLeftSword() const {
 		return Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
 	}
 
-	bool32 DualWielding::IsWeaponForDualWielding(oCItem* Weapon) const {
-		return Weapon->HasFlag(ITM_FLAG_SWD) || Weapon->HasFlag(ITM_FLAG_AXE);
-	}
-
-	void DualWielding::ApplyDualAnimations(oCNpc* Npc) const {
+	void DualWielding::ApplyDualAnimations() const {
 		Npc->ApplyOverlay(NPC_MDS_DUALWIELDING);
 	}
 
-	void DualWielding::RemoveDualAnimations(oCNpc* Npc) const {
+	void DualWielding::RemoveDualAnimations() const {
 		Npc->RemoveOverlay(NPC_MDS_DUALWIELDING);
 	}
 
+	bool32 DualWielding::IsWeaponForDualWielding(oCItem* Weapon) {
+		return Weapon->HasFlag(ITM_FLAG_SWD) || Weapon->HasFlag(ITM_FLAG_AXE);
+	}
 }

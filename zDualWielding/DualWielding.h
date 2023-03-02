@@ -9,35 +9,33 @@ namespace GOTHIC_ENGINE {
 		static const char* NPC_NODE_LEFTSWORD;
 		static const char* NPC_NODE_LEFTHANDSWORD;
 
-	private:
-		DualWielding() {};
+	public:
+		DualWielding(oCNpc* Npc);
 		~DualWielding();
 		
 	public:
-		static DualWielding* GetInstance();
-
-		bool32 HasLeftWeaponSlots(oCNpc* Npc) const;
-		void CreateLeftWeaponSlots(oCNpc* Npc) const;
+		bool32 HasLeftWeaponSlots() const;
+		void CreateLeftWeaponSlots() const;
 		void CreateNode(
-			oCNpc*           Npc, 
 			zCModelNodeInst* TemplateNode, 
 			const zSTRING&   NodeName, 
 			zMAT4            NodeTrafo
 		) const;
 
 		void EquipDualWeapons(
-			oCNpc*  Npc, 
 			oCItem* RightHandWeapon, 
 			oCItem* LeftHandWeapon
 		) const;
-		void UnequipLeftWeapon(oCNpc* Npc) const;
-		oCItem* GetEquippedLeftSword(oCNpc* Npc) const;
-		bool32 IsWeaponForDualWielding(oCItem* Weapon) const;
+		void UnequipLeftWeapon() const;
+		void UnequipRightWeapon() const;
+		oCItem* GetEquippedLeftSword() const;
 
-		void ApplyDualAnimations(oCNpc* Npc) const;
-		void RemoveDualAnimations(oCNpc* Npc) const;
+		void ApplyDualAnimations() const;
+		void RemoveDualAnimations() const;
+
+		static bool32 IsWeaponForDualWielding(oCItem* Weapon);
 
 	private:
-		static DualWielding* Instance;
+		oCNpc* Npc;
 	};
 }
