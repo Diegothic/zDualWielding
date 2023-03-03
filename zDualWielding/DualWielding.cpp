@@ -47,7 +47,7 @@ namespace GOTHIC_ENGINE {
 		if (!LeftHandSwordNode) {
 			zMAT4 NodeTrafo = LeftHandNode->trafo;
 			NodeTrafo.PostRotateX(180.0f);
-			NodeTrafo.Translate(zVEC3(0.0f, -5.0f, 0.0f));
+			NodeTrafo.Translate(zVEC3(0.0f, -10.0f, 0.0f));
 
 			CreateNode(LeftHandNode, NPC_NODE_LEFTHANDSWORD, NodeTrafo);
 		}
@@ -96,11 +96,13 @@ namespace GOTHIC_ENGINE {
 	void DualWielding::UnequipLeftWeapon() const {
 		zCModel*         NpcModel          = Npc->GetModel();
 		zCModelNodeInst* LeftSwordNode     = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
+		zCModelNodeInst* LongswordNode     = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
 		oCItem*          LeftSwordEquipped = Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
 
 		Npc->RemoveFromSlot(NPC_NODE_LEFTSWORD, 1, 1);
 		Npc->UnequipItem(LeftSwordEquipped);
 		Npc->GetModel()->SetNodeVisual(LeftSwordNode, Null, 0);
+		Npc->GetModel()->SetNodeVisual(LongswordNode, Null, 0);
 	}
 
 	void DualWielding::UnequipRightWeapon() const {
@@ -115,6 +117,71 @@ namespace GOTHIC_ENGINE {
 
 	oCItem* DualWielding::GetEquippedLeftSword() const {
 		return Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
+	}
+
+	void DualWielding::ChangeWeaponMode(
+		zSTRING const& NewWeaponMode, 
+		int FromFightMode
+	) const {
+		oCItem* LeftSwordEquipped = Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
+		oCItem* LeftSwordInHand   = Npc->GetSlotItem(NPC_NODE_LEFTHAND);
+
+		if (NewWeaponMode.IsEmpty() 
+			&& FromFightMode == NPC_WEAPON_1HS 
+			&& LeftSwordInHand
+			) {
+			SheathSwords();
+			return;
+		}
+		
+		if (NewWeaponMode.Compare("1H") 
+			&& LeftSwordEquipped 
+			&& !LeftSwordInHand
+			){
+			DrawSwords();
+			return;
+		};
+	}
+
+	void DualWielding::DrawSwords() const {
+		oCItem*          LeftSwordEquipped = Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
+		zCModel*         NpcModel          = Npc->GetModel();
+		zCModelNodeInst* SwordNode         = NpcModel->SearchNode(NPC_NODE_SWORD);
+		zCModelNodeInst* LongswordNode     = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst* LeftHandNode      = NpcModel->SearchNode(NPC_NODE_LEFTHAND);
+		zCModelNodeInst* LeftSwordNode     = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
+		zCModelNodeInst* LeftHandSwordNode = NpcModel->SearchNode(NPC_NODE_LEFTHANDSWORD);
+
+		Npc->RemoveFromSlot(NPC_NODE_LEFTHAND, 1, 1);
+		Npc->PutInSlot(NPC_NODE_LEFTHAND, LeftSwordEquipped, 1);
+
+		NpcModel->SetNodeVisual(SwordNode, Null, 0);
+		NpcModel->SetNodeVisual(LeftSwordNode, Null, 0);
+		NpcModel->SetNodeVisual(LongswordNode, Null, 0);
+		NpcModel->SetNodeVisual(LeftHandNode, Null, 0);
+		NpcModel->SetNodeVisual(LeftHandSwordNode, LeftSwordEquipped->visual, 0);
+	}
+
+	void DualWielding::SheathSwords() const {
+		oCItem*          RightSwordEquipped = Npc->GetSlotItem(NPC_NODE_SWORD);
+		oCItem*          LeftSwordInHand    = Npc->GetSlotItem(NPC_NODE_LEFTHAND);
+		zCModel*         NpcModel           = Npc->GetModel();
+		zCModelNodeInst* SwordNode          = NpcModel->SearchNode(NPC_NODE_SWORD);
+		zCModelNodeInst* LongswordNode      = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst* RightHandNode      = NpcModel->SearchNode(NPC_NODE_RIGHTHAND);
+		zCModelNodeInst* LeftHandNode       = NpcModel->SearchNode(NPC_NODE_LEFTHAND);
+		zCModelNodeInst* LeftSwordNode      = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
+		zCModelNodeInst* LeftHandSwordNode  = NpcModel->SearchNode(NPC_NODE_LEFTHANDSWORD);
+
+		Npc->RemoveFromSlot(NPC_NODE_LEFTHAND, 1, 1);
+		Npc->PutInSlot(NPC_NODE_LEFTHAND, Null, 1);
+
+		NpcModel->SetNodeVisual(LeftSwordNode, LeftSwordInHand->visual, 0);
+		NpcModel->SetNodeVisual(LongswordNode, RightSwordEquipped->visual, 0);
+		NpcModel->SetNodeVisual(SwordNode, Null, 0);
+		NpcModel->SetNodeVisual(LeftHandNode, Null, 0);
+		NpcModel->SetNodeVisual(RightHandNode, Null, 0);
+		NpcModel->SetNodeVisual(LeftHandSwordNode, Null, 0);
 	}
 
 	void DualWielding::ApplyDualAnimations() const {

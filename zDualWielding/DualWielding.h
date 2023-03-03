@@ -30,6 +30,13 @@ namespace GOTHIC_ENGINE {
 		void UnequipRightWeapon() const;
 		oCItem* GetEquippedLeftSword() const;
 
+		void ChangeWeaponMode(
+			zSTRING const& NewWeaponMode, 
+			int FromFightMode
+		) const;
+		void DrawSwords() const;
+		void SheathSwords() const;
+
 		void ApplyDualAnimations() const;
 		void RemoveDualAnimations() const;
 
