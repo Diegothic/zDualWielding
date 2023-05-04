@@ -6,16 +6,20 @@ namespace GOTHIC_ENGINE {
 	const char* DualWielding::NPC_NODE_LEFTSWORD = "ZS_LEFTSWORD";
 	const char* DualWielding::NPC_NODE_LEFTHANDSWORD = "ZS_LEFTHANDSWORD";
 
-	oCItem* DualWielding::CombinedSword = Null;
-
 	DualWielding::DualWielding(oCNpc* Npc) 
 		: Npc(Npc) {
+		CombinedSword = Null;
 		if (!HasLeftWeaponSlots()) {
 			CreateLeftWeaponSlots();
 		}
 	}
 
-	DualWielding::~DualWielding() { }
+	DualWielding::~DualWielding() { 
+		if (CombinedSword) {
+			CombinedSword->Release();
+			CombinedSword = Null;
+		}
+	}
 
 	bool32 DualWielding::HasLeftWeaponSlots() const {
 		TNpcSlot*        LeftWeaponInvSlot = Npc->GetInvSlot(NPC_NODE_LEFTSWORD);
@@ -42,7 +46,8 @@ namespace GOTHIC_ENGINE {
 			zMAT4 NodeTrafo = LongswordNode->trafo;
 			NodeTrafo.PostRotateX(180.0f);
 			NodeTrafo.PostRotateY(-60.0f);
-			NodeTrafo.Translate(zVEC3(0.0f, 35.0f, 1.5f));
+			NodeTrafo.PostRotateZ(10.0f);
+			NodeTrafo.Translate(zVEC3(0.0f, 35.0f, -5.0f));
 
 			CreateNode(LongswordNode, NPC_NODE_LEFTSWORD, NodeTrafo);
 		}
@@ -50,7 +55,7 @@ namespace GOTHIC_ENGINE {
 		if (!LeftHandSwordNode) {
 			zMAT4 NodeTrafo = LeftHandNode->trafo;
 			NodeTrafo.PostRotateX(180.0f);
-			NodeTrafo.Translate(zVEC3(0.0f, -10.0f, 0.0f));
+			NodeTrafo.Translate(zVEC3(0.0f, -5.0f, 0.0f));
 
 			CreateNode(LeftHandNode, NPC_NODE_LEFTHANDSWORD, NodeTrafo);
 		}
@@ -75,6 +80,37 @@ namespace GOTHIC_ENGINE {
 		NewNode->lastInstNode = NewNodeInst;
 
 		NpcModel->nodeList.Insert(NewNodeInst);
+	}
+
+	void DualWielding::LoadWeaponState() const {
+		if (!HasLeftWeaponSlots()) {
+			return;
+		}
+
+		if (Npc->IsSlotFree(NPC_NODE_LEFTSWORD)) {
+			return;
+		}
+
+		RemoveDualAnimations();
+
+		zCModel*         NpcModel      = Npc->GetModel();
+		zCModelNodeInst* SwordNode     = NpcModel->SearchNode(NPC_NODE_SWORD);
+		zCModelNodeInst* LongswordNode = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst* LeftSwordNode = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
+
+		if (Npc->fmode == 0) {
+			oCItem* LeftSwordEquipped  = Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
+			oCItem* RightSwordEquipped = Npc->GetSlotItem(NPC_NODE_SWORD);
+			Npc->PutInSlot(NPC_NODE_LEFTSWORD, LeftSwordEquipped, 1);
+
+			NpcModel->SetNodeVisual(SwordNode, Null, 0);
+			NpcModel->SetNodeVisual(LongswordNode, RightSwordEquipped->visual, 0);
+			NpcModel->SetNodeVisual(LeftSwordNode, LeftSwordEquipped->visual, 0);
+		} else {
+			NpcModel->SetNodeVisual(SwordNode, Null, 0);
+		}
+
+		ApplyDualAnimations();
 	}
 
 	void DualWielding::EquipDualWeapons(
@@ -132,6 +168,7 @@ namespace GOTHIC_ENGINE {
 		if (NewWeaponMode.IsEmpty() 
 			&& FromFightMode == NPC_WEAPON_1HS 
 			&& LeftSwordInHand
+			&& IsWeaponForDualWielding(LeftSwordInHand)
 			) {
 			SheathSwords();
 			return;
@@ -200,18 +237,18 @@ namespace GOTHIC_ENGINE {
 		}
 
 		zCModel*          NpcModel      = Npc->GetModel();
-		zCModelNodeInst*  LeftSwordNode = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
-		zCModelNodeInst*  LongswordNode = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst*  RightHandNode = NpcModel->SearchNode(NPC_NODE_RIGHTHAND);
+		zCModelNodeInst*  LeftHandNode  = NpcModel->SearchNode(NPC_NODE_LEFTHAND);
 		zCModelNodeInst** HitLimbs      = Npc->GetAnictrl()->hitlimb;
 
 		bool32 DamageFromRightWeapon = False;
-		bool32 DamageFromLeftWeapon = False;
+		bool32 DamageFromLeftWeapon  = False;
 		for (int i = 0; i < ANI_HITLIMB_MAX; i++) {
-			if (HitLimbs[i] == LongswordNode) {
+			if (HitLimbs[i] == RightHandNode) {
 				DamageFromRightWeapon = True;
 			}
 
-			if (HitLimbs[i] == LeftSwordNode) {
+			if (HitLimbs[i] == LeftHandNode) {
 				DamageFromLeftWeapon = True;
 			}
 		}
@@ -223,6 +260,7 @@ namespace GOTHIC_ENGINE {
 			}
 
 			CombinedSword = RightSwordEquipped->CreateCopy()->CastTo<oCItem>();
+			CombinedSword->AddRef();
 			CombinedSword->damageTotal += LeftSwordEquipped->damageTotal;
 			CombinedSword->flags &= LeftSwordEquipped->flags;
 			for (int i = 0; i < oEDamageIndex_MAX; i++) {

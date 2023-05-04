@@ -6,11 +6,19 @@ namespace GOTHIC_ENGINE {
 	// oCItem* GetWeapon() zCall( 0x007377A0 );
 	HOOK Hook_oCNpc_GetWeapon_Union PATCH(0x007377A0, &oCNpc::GetWeapon_Union);
 	oCItem* oCNpc::GetWeapon_Union() {
-		DualWielding DualWielder(this);
 		oCItem* Result = THISCALL(Hook_oCNpc_GetWeapon_Union)();
 
+		zCModel*         NpcModel      = GetModel();
+		zCModelNodeInst* LongswordNode = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst* LeftHandNode  = NpcModel->SearchNode(NPC_NODE_LEFTHAND);
+
+		if (!LongswordNode || !LeftHandNode) {
+			return Result;
+		}
+
+		DualWielding DualWielder(this);
 		oCItem* WeaponForDamage = DualWielder.GetWeaponForDamage();
-		if (WeaponForDamage != Null) {
+		if (WeaponForDamage) {
 			return WeaponForDamage;
 		}
 

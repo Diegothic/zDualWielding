@@ -21,6 +21,7 @@ namespace GOTHIC_ENGINE {
 			const zSTRING&   NodeName, 
 			zMAT4            NodeTrafo
 		) const;
+		void LoadWeaponState() const;
 
 		void EquipDualWeapons(
 			oCItem* RightHandWeapon, 
@@ -46,8 +47,6 @@ namespace GOTHIC_ENGINE {
 
 	private:
 		oCNpc* Npc;
-
-	private:
-		static oCItem* CombinedSword;
+		oCItem* CombinedSword;
 	};
 }

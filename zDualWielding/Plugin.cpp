@@ -41,6 +41,23 @@ namespace GOTHIC_ENGINE {
   }
 
   void LoadEnd() {
+      zCArray<zCVob*> ActiveVobList = ogame->GetWorld()->activeVobList;
+      for (int i = 0; i < ActiveVobList.GetNum(); i++) {
+          zCVob* Vob = ActiveVobList.GetSafe(i);
+          oCNpc* Npc = Vob->CastTo<oCNpc>();
+          if (Npc) {
+              zCModel*         NpcModel      = Npc->GetModel();
+              zCModelNodeInst* LongswordNode = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+              zCModelNodeInst* LeftHandNode  = NpcModel->SearchNode(NPC_NODE_LEFTHAND);
+
+              if (!LongswordNode || !LeftHandNode) {
+                  continue;
+              }
+
+              DualWielding DualWielder(Npc);
+              DualWielder.LoadWeaponState();
+          }
+      }
   }
 
   void Game_LoadBegin_NewGame() {
