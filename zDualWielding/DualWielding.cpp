@@ -6,7 +6,10 @@ namespace GOTHIC_ENGINE {
 	const char* DualWielding::NPC_NODE_LEFTSWORD = "ZS_LEFTSWORD";
 	const char* DualWielding::NPC_NODE_LEFTHANDSWORD = "ZS_LEFTHANDSWORD";
 
-	DualWielding::DualWielding(oCNpc* Npc) : Npc(Npc) {
+	oCItem* DualWielding::CombinedSword = Null;
+
+	DualWielding::DualWielding(oCNpc* Npc) 
+		: Npc(Npc) {
 		if (!HasLeftWeaponSlots()) {
 			CreateLeftWeaponSlots();
 		}
@@ -182,6 +185,62 @@ namespace GOTHIC_ENGINE {
 		NpcModel->SetNodeVisual(LeftHandNode, Null, 0);
 		NpcModel->SetNodeVisual(RightHandNode, Null, 0);
 		NpcModel->SetNodeVisual(LeftHandSwordNode, Null, 0);
+	}
+
+	oCItem* DualWielding::GetWeaponForDamage()
+	{
+		oCItem* LeftSwordEquipped  = GetEquippedLeftSword();
+		oCItem* RightSwordEquipped = Npc->GetSlotItem(NPC_NODE_SWORD);
+
+		if (!RightSwordEquipped
+			|| !LeftSwordEquipped
+			|| !IsWeaponForDualWielding(RightSwordEquipped)
+			) {
+			return Null;
+		}
+
+		zCModel*          NpcModel      = Npc->GetModel();
+		zCModelNodeInst*  LeftSwordNode = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
+		zCModelNodeInst*  LongswordNode = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst** HitLimbs      = Npc->GetAnictrl()->hitlimb;
+
+		bool32 DamageFromRightWeapon = False;
+		bool32 DamageFromLeftWeapon = False;
+		for (int i = 0; i < ANI_HITLIMB_MAX; i++) {
+			if (HitLimbs[i] == LongswordNode) {
+				DamageFromRightWeapon = True;
+			}
+
+			if (HitLimbs[i] == LeftSwordNode) {
+				DamageFromLeftWeapon = True;
+			}
+		}
+
+		if (DamageFromRightWeapon && DamageFromLeftWeapon) {
+			if (CombinedSword) {
+				CombinedSword->Release();
+				CombinedSword = Null;
+			}
+
+			CombinedSword = RightSwordEquipped->CreateCopy()->CastTo<oCItem>();
+			CombinedSword->damageTotal += LeftSwordEquipped->damageTotal;
+			CombinedSword->flags &= LeftSwordEquipped->flags;
+			for (int i = 0; i < oEDamageIndex_MAX; i++) {
+				CombinedSword->damage[i] += LeftSwordEquipped->damage[i];
+			}
+
+			return CombinedSword;
+		}
+
+		if (DamageFromRightWeapon) {
+			return RightSwordEquipped;
+		}
+
+		if (DamageFromLeftWeapon) {
+			return LeftSwordEquipped;
+		}
+
+		return Null;
 	}
 
 	void DualWielding::ApplyDualAnimations() const {

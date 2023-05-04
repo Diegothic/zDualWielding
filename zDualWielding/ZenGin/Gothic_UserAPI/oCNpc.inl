@@ -3,6 +3,9 @@
 // User API for oCNpc
 // Add your methods here
 
+// oCItem* GetWeapon() zCall( 0x007377A0 );
+oCItem* GetWeapon_Union();
+
 // void EquipWeapon( oCItem* ) zCall( 0x0073A030 );
 void EquipWeapon_Union(oCItem*);
 

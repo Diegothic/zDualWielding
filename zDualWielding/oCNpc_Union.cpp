@@ -3,6 +3,20 @@
 
 namespace GOTHIC_ENGINE {
 
+	// oCItem* GetWeapon() zCall( 0x007377A0 );
+	HOOK Hook_oCNpc_GetWeapon_Union PATCH(0x007377A0, &oCNpc::GetWeapon_Union);
+	oCItem* oCNpc::GetWeapon_Union() {
+		DualWielding DualWielder(this);
+		oCItem* Result = THISCALL(Hook_oCNpc_GetWeapon_Union)();
+
+		oCItem* WeaponForDamage = DualWielder.GetWeaponForDamage();
+		if (WeaponForDamage != Null) {
+			return WeaponForDamage;
+		}
+
+		return Result;
+	}
+
 	// void EquipWeapon( oCItem* ) zCall( 0x0073A030 );
 	HOOK Hook_oCNpc_EquipWeapon_Union PATCH(&oCNpc::EquipWeapon, &oCNpc::EquipWeapon_Union);
 	void oCNpc::EquipWeapon_Union(oCItem* WeaponToEquip) {

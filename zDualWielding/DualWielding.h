@@ -36,13 +36,18 @@ namespace GOTHIC_ENGINE {
 		) const;
 		void DrawSwords() const;
 		void SheathSwords() const;
+		oCItem* GetWeaponForDamage();
 
 		void ApplyDualAnimations() const;
 		void RemoveDualAnimations() const;
 
+	public:
 		static bool32 IsWeaponForDualWielding(oCItem* Weapon);
 
 	private:
 		oCNpc* Npc;
+
+	private:
+		static oCItem* CombinedSword;
 	};
 }
