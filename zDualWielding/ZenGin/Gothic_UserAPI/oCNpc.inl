@@ -11,3 +11,6 @@ void EquipWeapon_Union(oCItem*);
 
 // void SetWeaponMode2_novt( zSTRING const& ) zCall( 0x00738C60 );
 void SetWeaponMode2_novt_Union(zSTRING const&);
+
+// void DropUnconscious(float, oCNpc*) zCall(0x00735EB0);
+void DropUnconscious_Union(float, oCNpc*);

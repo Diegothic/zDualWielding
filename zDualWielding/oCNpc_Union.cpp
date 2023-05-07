@@ -4,7 +4,7 @@
 namespace GOTHIC_ENGINE {
 
 	// oCItem* GetWeapon() zCall( 0x007377A0 );
-	HOOK Hook_oCNpc_GetWeapon_Union PATCH(0x007377A0, &oCNpc::GetWeapon_Union);
+	HOOK Hook_oCNpc_GetWeapon_Union PATCH(&oCNpc::GetWeapon, &oCNpc::GetWeapon_Union);
 	oCItem* oCNpc::GetWeapon_Union() {
 		oCItem* Result = THISCALL(Hook_oCNpc_GetWeapon_Union)();
 
@@ -74,5 +74,45 @@ namespace GOTHIC_ENGINE {
 		THISCALL(Hook_oCNpc_SetWeaponMode2_novt_Union)(NewWeaponMode);
 
 		DualWielder.ChangeWeaponMode(NewWeaponMode, FromFightMode);
+	}
+
+	zCOLOR* MESSAGE_COLOR = new zCOLOR(255, 255, 255, 255);
+
+	// void DropUnconscious(float, oCNpc*) zCall(0x00735EB0);
+	HOOK Hook_oCNpc_DropUnconscious_Union PATCH(&oCNpc::DropUnconscious, &oCNpc::DropUnconscious_Union);
+	void oCNpc::DropUnconscious_Union(float HitAngle, oCNpc* Instigator) {
+		DualWielding DualWielder(this);
+
+		bool32  WasInFightMode  = fmode == 0 ? False : True;
+		bool32  WasDualWielding = False;
+		oCItem* LeftSword       = Null;
+		oCItem* RightSword      = Null;
+		if (WasInFightMode) {
+			oCItem* LeftSwordInHand = DualWielder.GetLeftSwordInHand();
+			if (LeftSwordInHand
+				&& DualWielding::IsWeaponForDualWielding(LeftSwordInHand)
+			) {
+				WasDualWielding = True;
+				LeftSword = LeftSwordInHand;
+				LeftSword->AddRef();
+			}
+		}
+		else {
+			LeftSword  = DualWielder.GetEquippedLeftSword();
+			RightSword = GetSlotItem(NPC_NODE_SWORD);
+			if (LeftSword && RightSword) {
+				WasDualWielding = True;
+				LeftSword->AddRef();
+				RightSword->AddRef();
+			}
+		}
+
+		THISCALL(Hook_oCNpc_DropUnconscious_Union)(HitAngle, Instigator);
+
+		if (!WasDualWielding) {
+			return;
+		}
+
+		DualWielder.DropWeapons(WasInFightMode, RightSword, LeftSword);
 	}
 }

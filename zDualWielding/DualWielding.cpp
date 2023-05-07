@@ -6,19 +6,16 @@ namespace GOTHIC_ENGINE {
 	const char* DualWielding::NPC_NODE_LEFTSWORD = "ZS_LEFTSWORD";
 	const char* DualWielding::NPC_NODE_LEFTHANDSWORD = "ZS_LEFTHANDSWORD";
 
+	oCItem* DualWielding::CombinedSword = Null;
+
 	DualWielding::DualWielding(oCNpc* Npc) 
 		: Npc(Npc) {
-		CombinedSword = Null;
 		if (!HasLeftWeaponSlots()) {
 			CreateLeftWeaponSlots();
 		}
 	}
 
-	DualWielding::~DualWielding() { 
-		if (CombinedSword) {
-			CombinedSword->Release();
-			CombinedSword = Null;
-		}
+	DualWielding::~DualWielding() {
 	}
 
 	bool32 DualWielding::HasLeftWeaponSlots() const {
@@ -158,6 +155,10 @@ namespace GOTHIC_ENGINE {
 		return Npc->GetSlotItem(NPC_NODE_LEFTSWORD);
 	}
 
+	oCItem* DualWielding::GetLeftSwordInHand() const {
+		return Npc->GetSlotItem(NPC_NODE_LEFTHAND);
+	}
+
 	void DualWielding::ChangeWeaponMode(
 		zSTRING const& NewWeaponMode, 
 		int FromFightMode
@@ -227,7 +228,7 @@ namespace GOTHIC_ENGINE {
 	oCItem* DualWielding::GetWeaponForDamage()
 	{
 		oCItem* LeftSwordEquipped  = GetEquippedLeftSword();
-		oCItem* RightSwordEquipped = Npc->GetSlotItem(NPC_NODE_SWORD);
+		oCItem* RightSwordEquipped = Npc->GetSlotItem(NPC_NODE_RIGHTHAND);
 
 		if (!RightSwordEquipped
 			|| !LeftSwordEquipped
@@ -279,6 +280,45 @@ namespace GOTHIC_ENGINE {
 		}
 
 		return Null;
+	}
+
+	void DualWielding::DropWeapons(bool32 WasInFightMode, oCItem* RightSword, oCItem* LeftSword) {
+		zCModel*         NpcModel          = Npc->GetModel();
+		zCModelNodeInst* SwordNode         = NpcModel->SearchNode(NPC_NODE_SWORD);
+		zCModelNodeInst* LongswordNode     = NpcModel->SearchNode(NPC_NODE_LONGSWORD);
+		zCModelNodeInst* LeftHandNode      = NpcModel->SearchNode(NPC_NODE_LEFTHAND);
+		zCModelNodeInst* LeftSwordNode     = NpcModel->SearchNode(NPC_NODE_LEFTSWORD);
+		zCModelNodeInst* LeftHandSwordNode = NpcModel->SearchNode(NPC_NODE_LEFTHANDSWORD);
+
+		if (WasInFightMode) {
+			UnequipRightWeapon();
+			UnequipLeftWeapon();
+
+			NpcModel->SetNodeVisual(LeftHandSwordNode, Null, 0);
+			NpcModel->SetNodeVisual(LeftHandNode, Null, 0);
+
+			if (LeftSword) {
+				ogame->GetGameWorld()->AddVob(LeftSword);
+				ogame->GetGameWorld()->EnableVob(LeftSword, Null);
+				zMAT4 Trafo = NpcModel->GetTrafoNodeToModel(LeftHandNode);
+				LeftSword->SetPositionWorld(Npc->GetPositionWorld() + Trafo.GetTranslation());
+				LeftSword->physicsEnabled = True;
+				LeftSword->SetSleeping(False);
+				LeftSword->Release();
+			}
+		}
+		else {
+			UnequipRightWeapon();
+			UnequipLeftWeapon();
+
+			Npc->EquipItem(RightSword);
+			Npc->PutInSlot(NPC_NODE_SWORD, RightSword, 1);
+			EquipDualWeapons(RightSword, LeftSword);
+			ApplyDualAnimations();
+
+			LeftSword->Release();
+			RightSword->Release();
+		}
 	}
 
 	void DualWielding::ApplyDualAnimations() const {

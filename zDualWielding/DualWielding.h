@@ -30,6 +30,7 @@ namespace GOTHIC_ENGINE {
 		void UnequipLeftWeapon() const;
 		void UnequipRightWeapon() const;
 		oCItem* GetEquippedLeftSword() const;
+		oCItem* GetLeftSwordInHand() const;
 
 		void ChangeWeaponMode(
 			zSTRING const& NewWeaponMode, 
@@ -38,6 +39,7 @@ namespace GOTHIC_ENGINE {
 		void DrawSwords() const;
 		void SheathSwords() const;
 		oCItem* GetWeaponForDamage();
+		void DropWeapons(bool32 WasInFightMode, oCItem* RightSword, oCItem* LeftSword);
 
 		void ApplyDualAnimations() const;
 		void RemoveDualAnimations() const;
@@ -47,6 +49,8 @@ namespace GOTHIC_ENGINE {
 
 	private:
 		oCNpc* Npc;
-		oCItem* CombinedSword;
+
+	private:
+		static oCItem* CombinedSword;
 	};
 }
