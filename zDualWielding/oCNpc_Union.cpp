@@ -76,8 +76,6 @@ namespace GOTHIC_ENGINE {
 		DualWielder.ChangeWeaponMode(NewWeaponMode, FromFightMode);
 	}
 
-	zCOLOR* MESSAGE_COLOR = new zCOLOR(255, 255, 255, 255);
-
 	// void DropUnconscious(float, oCNpc*) zCall(0x00735EB0);
 	HOOK Hook_oCNpc_DropUnconscious_Union PATCH(&oCNpc::DropUnconscious, &oCNpc::DropUnconscious_Union);
 	void oCNpc::DropUnconscious_Union(float HitAngle, oCNpc* Instigator) {
